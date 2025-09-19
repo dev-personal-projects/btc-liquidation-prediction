@@ -2,5 +2,6 @@
 .telegram_session*
 __pycache__/
 *.pyc
-data/
+
 .venv/
+.vscode/

@@ -1,0 +1,22 @@
+# Copy this content to a file named .env in the project root
+
+# Telegram API Credentials (get from https://my.telegram.org/apps)
+TELEGRAM_API_ID=your_api_id_here
+TELEGRAM_API_HASH=your_api_hash_here
+TELEGRAM_SESSION=.telegram_session
+
+# Group Settings
+TELEGRAM_GROUP=WhaleBot Rektd ☠️
+TELEGRAM_GROUP_ID=1407057468
+
+# Date Range Settings  
+START_DATETIME=2025-08-01T00:00:00+00:00
+END_DATETIME=2025-09-20T00:00:00+00:00
+DAYS_BACK=50
+
+# Message Filtering
+FILTER_TEXT_CONTAINS=Liquidated
+
+# Price Settings
+BINANCE_SYMBOL=BTCUSDT
+AGG_INTERVAL=1H

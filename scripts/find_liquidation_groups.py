@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Find Telegram groups/channels that likely contain liquidation data.
-Searches for keywords like "liquidation", "rekt", "whale", etc.
-"""
 
 import os
 import sys
@@ -24,7 +20,6 @@ CHECK_MESSAGES = os.getenv("CHECK_RECENT_MESSAGES", "true").lower() == "true"
 
 
 def contains_keywords(text: str, keywords: list) -> list:
-    """Check if text contains any keywords, return matching ones."""
     if not text:
         return []
     text_lower = text.lower()
@@ -32,7 +27,6 @@ def contains_keywords(text: str, keywords: list) -> list:
 
 
 def check_recent_messages(client, entity, limit=10):
-    """Check recent messages for liquidation-related content."""
     try:
         messages = client.get_messages(entity, limit=limit)
         keyword_matches = []
@@ -43,7 +37,7 @@ def check_recent_messages(client, entity, limit=10):
                 if matches:
                     keyword_matches.extend(matches)
         
-        return list(set(keyword_matches))  # Remove duplicates
+        return list(set(keyword_matches))
     except Exception:
         return []
 

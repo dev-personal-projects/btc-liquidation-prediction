@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""
-Parse WhaleBot-style Telegram messages into structured liquidation events,
-then aggregate per time interval.
-"""
 
 import os
 import re
 from pathlib import Path
-
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -24,10 +19,6 @@ SYMBOL_RE = re.compile(r"\bon\s+([A-Z0-9_\-/:]+)\s+at\b", re.I)
 
 
 def parse_row(text: str) -> tuple[str | None, float | None, str | None]:
-    """
-    Return (side, amount_usd, symbol) or (None, None, None) if not a liquidation.
-    side: 'long' | 'short'
-    """
     if not text:
         return None, None, None
 
@@ -56,7 +47,7 @@ def main() -> None:
     if "timestamp_utc" not in df.columns or "text" not in df.columns:
         raise ValueError("Input must contain 'timestamp_utc' and 'text' columns")
 
-    # Parse
+
     parsed = df["text"].apply(parse_row)
     df["side"] = parsed.apply(lambda x: x[0])
     df["amount_usd"] = parsed.apply(lambda x: x[1])

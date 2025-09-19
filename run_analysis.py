@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""
-Complete liquidation correlation analysis pipeline.
-Runs all steps: fetch telegram → parse → fetch prices → build dataset → analyze correlation
-"""
 
 import subprocess
 import sys
 from pathlib import Path
 
 def run_step(script_path: str, description: str) -> bool:
-    """Run a script and return success status."""
     print(f"\n{'='*60}")
     print(f"STEP: {description}")
     print(f"{'='*60}")
@@ -39,16 +34,16 @@ def main():
         ("src/analyze_correlation.py", "Analyzing liquidation-price correlations")
     ]
     
-    print("🚀 Starting Liquidation Correlation Analysis Pipeline")
+    print("Starting Liquidation Correlation Analysis Pipeline")
     
     for script, description in steps:
         if not run_step(script, description):
-            print(f"\n❌ Pipeline failed at: {description}")
+            print(f"\nPipeline failed at: {description}")
             return False
     
     print(f"\n{'='*60}")
-    print("✅ Pipeline completed successfully!")
-    print("📊 Check data/processed/ for results:")
+    print("Pipeline completed successfully!")
+    print("Check data/processed/ for results:")
     print("   - correlation_summary.csv")
     print("   - event_study_summary.csv")
     print("   - dataset.csv")

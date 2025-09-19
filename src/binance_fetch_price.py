@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Fetch BTC prices from Binance public API and save them to CSV.
-"""
 
 import os
 import time
@@ -9,12 +6,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import requests
 import pandas as pd
+from dotenv import load_dotenv
 
-try:
-    from dotenv import load_dotenv  # optional, only used if installed
-    load_dotenv()
-except Exception:
-    pass
+load_dotenv()
 
 API_URL = "https://api.binance.com/api/v3/klines"
 
@@ -33,16 +27,7 @@ def _interval_binance(agg: str) -> str:
         return "1d"
     raise ValueError("AGG_INTERVAL must be 1H or 1D")
 
-def fetch_binance_klines(
-    symbol: str,
-    start_utc: datetime,
-    end_utc: datetime,
-    interval: str,
-) -> pd.DataFrame:
-    """
-    Stream klines from Binance between start_utc and end_utc (UTC, inclusive of start).
-    Returns DataFrame with timestamp_utc (close time), open, high, low, close, volume.
-    """
+def fetch_binance_klines(symbol: str, start_utc: datetime, end_utc: datetime, interval: str) -> pd.DataFrame:
     start_ms = int(start_utc.timestamp() * 1000)
     end_ms = int(end_utc.timestamp() * 1000)
 
@@ -51,14 +36,13 @@ def fetch_binance_klines(
 
     while start_ms < end_ms:
         params = dict(params_base, startTime=start_ms, endTime=end_ms)
-        # Simple retry loop for transient errors / rate limit
         for attempt in range(3):
             try:
                 r = requests.get(API_URL, params=params, timeout=30)
                 r.raise_for_status()
                 rows = r.json()
                 break
-            except requests.RequestException as e:
+            except requests.RequestException:
                 if attempt == 2:
                     raise
                 time.sleep(0.5 + attempt)
@@ -77,9 +61,7 @@ def fetch_binance_klines(
         df["timestamp_utc"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
         all_chunks.append(df[["timestamp_utc","open","high","low","close","volume"]])
 
-        # Advance cursor to just after the last close_time returned
         start_ms = int(rows[-1][6]) + 1
-        # Be polite to API
         time.sleep(0.2)
 
     if not all_chunks:
@@ -94,7 +76,6 @@ def main():
     agg_interval = os.getenv("AGG_INTERVAL", "1H").upper()
     interval = _interval_binance(agg_interval)
 
-    # Defaults: last 90 days window
     now_utc = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
     default_start = now_utc - timedelta(days=300)
     start_utc = _parse_dt(os.getenv("START_DATETIME"), default_start)

@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Join liquidation aggregates with BTC price and engineer features.
-"""
 
 import os
 from pathlib import Path
@@ -27,14 +24,14 @@ def main() -> None:
     if not PRICE_PATH.exists():
         raise FileNotFoundError(f"Missing input: {PRICE_PATH}")
 
-    # Load inputs
+
     liq = pd.read_csv(LIQS_PATH, parse_dates=["timestamp_utc"])
     px = pd.read_csv(PRICE_PATH, parse_dates=["timestamp_utc"])
 
-    # Keep only necessary price columns; ensure sorted by time
+
     px = px.sort_values("timestamp_utc")[["timestamp_utc", "close", "volume"]]
 
-    # If  price is already resampled (it is, from binance_fetch_price.py), an inner merge on timestamp is clean.
+
     df = pd.merge(liq.sort_values("timestamp_utc"), px, on="timestamp_utc", how="inner")
 
     if df.empty:
@@ -43,23 +40,23 @@ def main() -> None:
         print(f"saved {OUT_PATH} (rows=0)")
         return
 
-    # Sort and engineer features
+
     df = df.sort_values("timestamp_utc").reset_index(drop=True)
 
-    # Net and total liquidation USD
+
     df["net_liq_usd"] = df["short_liq_usd"] - df["long_liq_usd"]
     df["liq_total_usd"] = df["short_liq_usd"] + df["long_liq_usd"]
 
-    # Returns: current vs previous, and next-period return (target for correlation)
+
     df["close_prev"] = df["close"].shift(1)
     df["ret"] = (df["close"] - df["close_prev"]) / df["close_prev"]
     df["close_next"] = df["close"].shift(-1)
     df["ret_next"] = (df["close_next"] - df["close"]) / df["close"]
 
-    # Optional light cleaning: drop first/last rows that have NaNs in returns
+
     df = df.dropna(subset=["ret", "ret_next"]).reset_index(drop=True)
 
-    # Save
+
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(OUT_PATH, index=False)
     print(f"saved {OUT_PATH} (rows={len(df)}, interval={RULE})")

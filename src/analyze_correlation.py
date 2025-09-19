@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Computational analysis of liquidation-price correlations.
-Correlates liquidation metrics with BTC price movements.
-"""
 
 import os
 from pathlib import Path
@@ -17,7 +13,6 @@ OUT_DIR = Path("data/processed")
 INTERVAL = os.getenv("AGG_INTERVAL", "1H").upper()
 
 def forward_return(close: pd.Series, k: int) -> pd.Series:
-    """Forward k-period simple return from time t: (close[t+k] - close[t]) / close[t]."""
     return (close.shift(-k) - close) / close
 
 def main() -> None:
@@ -34,7 +29,7 @@ def main() -> None:
     if missing:
         raise ValueError(f"dataset missing columns: {sorted(missing)}")
 
-    # === 1) Correlation summary ===
+
     target = "ret_next"
     predictors = [
         "long_liq_usd", "short_liq_usd", "net_liq_usd", "liq_total_usd",
@@ -44,7 +39,7 @@ def main() -> None:
     rows = []
     for col in predictors:
         s1, s2 = df[col], df[target]
-        # drop rows with NaN in either
+
         mask = s1.notna() & s2.notna()
         if mask.sum() == 0:
             pearson = np.nan
@@ -58,11 +53,11 @@ def main() -> None:
     corr_out = OUT_DIR / "correlation_summary.csv"
     corr_df.to_csv(corr_out, index=False)
 
-    # === 2) Event study (spikes) ===
-    # Define horizons based on interval
+
+
     horizons = [1, 3, 6, 12, 24] if INTERVAL == "1H" else [1, 2, 3, 5, 10]
 
-    # Spike thresholds (95th percentile of non-zero volumes)
+
     def q95_nonzero(x: pd.Series) -> float:
         x = x.fillna(0.0)
         x = x[x > 0]
@@ -74,7 +69,7 @@ def main() -> None:
     df["evt_long_spike"] = df["long_liq_usd"] >= long_thr if np.isfinite(long_thr) else False
     df["evt_short_spike"] = df["short_liq_usd"] >= short_thr if np.isfinite(short_thr) else False
 
-    # For each event set, compute forward returns over horizons
+
     def summarize_events(flag_col: str, label: str) -> list[dict]:
         idx = df.index[df[flag_col].fillna(False)]
         results = []
@@ -100,7 +95,7 @@ def main() -> None:
     events_out = OUT_DIR / "event_study_summary.csv"
     events_df.to_csv(events_out, index=False)
 
-    # Console summary
+
     print(f"Saved: {corr_out} and {events_out}")
     print("\nCorrelation (ret_next):")
     print(corr_df.to_string(index=False))
